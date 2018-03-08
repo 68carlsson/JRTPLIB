@@ -51,6 +51,8 @@
 #ifndef WIN32
 	#include <unistd.h>
 	#include <stdlib.h>
+ #include <pwd.h>
+ #include <string>
 #else
 	#include <winbase.h>
 #endif // WIN32
@@ -1549,9 +1551,18 @@ int RTPSession::CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve)
 	if (!gotlogin)
 	{
 		char *logname = getenv("LOGNAME");
-		if (logname == 0)
-			return ERR_RTP_SESSION_CANTGETLOGINNAME;
-		strncpy((char *)buffer,logname,*bufferlength);
+		if (logname != 0)
+		  strncpy((char *)buffer,logname,*bufferlength);
+		else
+		{
+		   struct passwd *pwd = getpwuid(getuid());
+      if (pwd)
+         strncpy((char *)buffer,pwd->pw_name,*bufferlength);
+      else
+		       return ERR_RTP_SESSION_CANTGETLOGINNAME;
+		}
+			
+		
 	}
 #else // Win32 version
 
